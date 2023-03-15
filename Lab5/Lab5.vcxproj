@@ -135,10 +135,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="graphicsGL.cpp" />
+    <ClCompile Include="logics.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="graphicsGL.h" />
+    <ClInclude Include="logics.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

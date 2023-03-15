@@ -21,9 +21,15 @@
     <ClCompile Include="graphicsGL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="logics.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="graphicsGL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="logics.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

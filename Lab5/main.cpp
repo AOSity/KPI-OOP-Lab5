@@ -1,7 +1,8 @@
-// #include <iostream>
-// using namespace std;
+#include <iostream>
+using namespace std;
 
 #include "graphicsGL.h"
+#include "logics.h"
 
 int main(void)
 {
@@ -10,7 +11,7 @@ int main(void)
         return 1;
     
     /* Create window */
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Lab5 - Horbul Andrii", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "OOP-Lab5", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -20,24 +21,32 @@ int main(void)
     ApplySettings(window);
     ApplyCallbacks(window);
 
+    Group* root = new Group(0,0);
+    root->add(new Rectangle(100,150));
+    root->add(new Circle(350,100));
+
+    Group* child = new Group(0,0);
+    child->add(new Rectangle(1000,250));
+    child->add(new Circle(250,700));
+    root->add(child);
+
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glColor3f(1, 0, 1);
-        glBegin(GL_POLYGON);
-        glVertex2f(123, 123);
-        glVertex2f(223, 423);
-        glVertex2f(23, 323);
-        glEnd();
+        //root->operation();
+
+        root->operation();
 
         /* Buffer swap and events processing */
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-    
+
+    delete root;
+
     /* GLFW termination */
     glfwTerminate();
     return 0;
