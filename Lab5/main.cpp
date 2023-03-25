@@ -21,13 +21,14 @@ int main(void)
     ApplySettings(window);
     ApplyCallbacks(window);
 
-    Group* root = new Group(0,0);
-    root->add(new Rectangle(100,150));
-    root->add(new Circle(350,100));
+    Group* root = new Group;
+    root->add(new Rectangle(200, 250, 300, 150));
+    root->add(new Circle(350, 140, 80));
+    root->add(new Circle(1350, 900, 69));
 
-    Group* child = new Group(0,0);
-    child->add(new Rectangle(1000,250));
-    child->add(new Circle(250,700));
+    Group* child = new Group;
+    child->add(new Rectangle(1000, 550, 100, 200));
+    child->add(new Circle(250, 700, 155));
     root->add(child);
 
     /* Loop until the user closes the window */
@@ -36,9 +37,15 @@ int main(void)
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
-        //root->operation();
+        glColor3f(0.6, 0.6, 0.6);
+        glBegin(GL_POLYGON);
+        glVertex2f(0, 0);
+        glVertex2f(1920, 0);
+        glVertex2f(1920, 1080);
+        glVertex2f(0, 1080);
+        glEnd();
 
-        root->operation();
+        root->render();
 
         /* Buffer swap and events processing */
         glfwSwapBuffers(window);

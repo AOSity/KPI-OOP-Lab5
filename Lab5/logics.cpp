@@ -5,28 +5,64 @@
 
 /* Composite */
 
- void Rectangle::operation()
- {
-    //std::cout << "Rectangle operation" << std::endl;
-	 glColor3f(0, 0.5, 1);
-	glBegin(GL_POLYGON);
-	glVertex2f(xpos + 50, ypos + 50);
-	glVertex2f(xpos - 50, ypos + 50);
-	glVertex2f(xpos - 50, ypos - 50);
-	glVertex2f(xpos + 50, ypos - 50);
-	glEnd();
- }
-
-void Circle::operation()
+void Rectangle::borders(float* xmin, float* xmax, float* ymin, float* ymax)
 {
-    //std::cout << "Circle operation" << std::endl;
-	glColor3f(0.5, 0.5, 0);
+	*xmin = xpos - width / 2.0f;
+	*xmax = xpos + width / 2.0f;
+	*ymin = ypos - height / 2.0f;
+	*ymax = ypos + height / 2.0f;
+}
+
+void Rectangle::render()
+{
+	glColor3f(0, 0.5, 1);
 	glBegin(GL_POLYGON);
-	for (int i = 0; i < 20; i++)
+	glVertex2f(xpos + width / 2.0f, ypos + height / 2.0f);
+	glVertex2f(xpos - width / 2.0f, ypos + height / 2.0f);
+	glVertex2f(xpos - width / 2.0f, ypos - height / 2.0f);
+	glVertex2f(xpos + width / 2.0f, ypos - height / 2.0f);
+	glEnd();
+
+	glColor3f(0, 0, 0);
+	glLineWidth(2);
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(xpos + width / 2.0f, ypos + height / 2.0f);
+	glVertex2f(xpos - width / 2.0f, ypos + height / 2.0f);
+	glVertex2f(xpos - width / 2.0f, ypos - height / 2.0f);
+	glVertex2f(xpos + width / 2.0f, ypos - height / 2.0f);
+	glEnd();
+}
+
+void Circle::borders(float* xmin, float* xmax, float* ymin, float* ymax)
+{
+	*xmin = xpos - radius;
+	*xmax = xpos + radius;
+	*ymin = ypos - radius;
+	*ymax = ypos + radius;
+}
+
+void Circle::render()
+{
+	glColor3f(1, 1, 0);
+	glBegin(GL_POLYGON);
+	for (int i = 0; i < 50; i++)
 	{
-		float theta = 2.0f * 3.1415926f * float(i) / float(20);
-		float cx = 50 * cosf(theta + 3.1415926f / 2);
-		float cy = 50 * sinf(theta + 3.1415926f / 2);
+		float theta = 2.0f * 3.1415926f * float(i) / float(50);
+		float cx = radius * cosf(theta + 3.1415926f / 2);
+		float cy = radius * sinf(theta + 3.1415926f / 2);
+
+		glVertex2f(xpos + cx, ypos + cy);
+	}
+	glEnd();
+
+	glColor3f(0, 0, 0);
+	glLineWidth(2);
+	glBegin(GL_LINE_LOOP);
+	for (int i = 0; i < 50; i++)
+	{
+		float theta = 2.0f * 3.1415926f * float(i) / float(50);
+		float cx = radius * cosf(theta + 3.1415926f / 2);
+		float cy = radius * sinf(theta + 3.1415926f / 2);
 
 		glVertex2f(xpos + cx, ypos + cy);
 	}
@@ -35,22 +71,60 @@ void Circle::operation()
 
 Group::~Group()
 {
-	for (Component* component : components) {
+	for (Component* component : components) 
+	{
 		delete component;
 	}
 }
 
-void Group::operation()
+void Group::borders(float* xmin, float* xmax, float* ymin, float* ymax)
 {
-	//std::cout << "Group operation" << std::endl;
-	for (Component* component : components) {
-		component->operation();
+	*xmin = this->xmin;
+	*xmax = this->xmax;
+	*ymin = this->ymin;
+	*ymax = this->ymax;
+}
+
+void Group::render()
+{
+	for (Component* component : components) 
+	{
+		component->render();
 	}
+
+	glColor3f(0, 0, 0);
+	glLineWidth(2);
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(xmin, ymin);
+	glVertex2f(xmax, ymin);
+	glVertex2f(xmax, ymax);
+	glVertex2f(xmin, ymax);
+	glEnd();
 }
 
 void Group::add(Component* component)
 {
 	components.push_back(component);
+
+	float cxmin, cxmax, cymin, cymax;
+	component->borders(&cxmin, &cxmax, &cymin, &cymax);
+
+	if (cxmin < xmin)
+	{
+		xmin = cxmin;
+	}
+	if (cxmax > xmax)
+	{
+		xmax = cxmax;
+	}
+	if (cymin < ymin)
+	{
+		ymin = cymin;
+	}
+	if (cymax > ymax)
+	{
+		ymax = cymax;
+	}
 }
 
 void Group::remove(Component* component)
@@ -60,7 +134,8 @@ void Group::remove(Component* component)
 
 Component* Group::getChild(int index)
 {
-	if (index < 0 || index >= components.size()) {
+	if (index < 0 || index >= components.size())
+	{
 		return nullptr;
 	}
 	return components[index];
