@@ -1,7 +1,9 @@
 #include "logics.h"
 
 #include <GLFW/glfw3.h>
+
 #include <iostream>
+#include <cmath>
 
 /* Composite */
 
@@ -71,7 +73,7 @@ void Circle::render()
 
 Group::~Group()
 {
-	for (Component* component : components) 
+	for (Component* component : components)
 	{
 		delete component;
 	}
@@ -87,7 +89,7 @@ void Group::borders(float* xmin, float* xmax, float* ymin, float* ymax)
 
 void Group::render()
 {
-	for (Component* component : components) 
+	for (Component* component : components)
 	{
 		component->render();
 	}
@@ -139,4 +141,75 @@ Component* Group::getChild(int index)
 		return nullptr;
 	}
 	return components[index];
+}
+
+Component* Group::onCursor(double cursorX, double cursorY)
+{
+	Component* foundComponent = nullptr;
+	for (Component* component : components)
+	{
+		if (component->onCursor(cursorX, cursorY) != nullptr)
+		{
+			foundComponent = component->onCursor(cursorX, cursorY);
+		}
+	}
+
+	if (foundComponent != nullptr)
+	{
+		std::cout << "Found component: " << foundComponent << std::endl;
+		return foundComponent;
+	}
+	else
+	{
+		std::cout << "Nothing found!" << std::endl;
+		return nullptr;
+	}
+}
+
+Component* Rectangle::onCursor(double cursorX, double cursorY)
+{
+	if (cursorX <= xpos + width / 2.f && cursorX >= xpos - width / 2.f
+		&& cursorY <= ypos + height / 2.f && cursorY >= ypos - height / 2.f)
+	{
+		return this;
+	}
+	return nullptr;
+}
+
+Component* Circle::onCursor(double cursorX, double cursorY)
+{
+	double CenterCursorDistance = sqrt(pow(xpos - cursorX, 2) + pow(ypos - cursorY, 2));
+	if (CenterCursorDistance <= radius)
+	{
+		return this;
+	}
+	return nullptr;
+}
+
+void Rectangle::renderSelection()
+{
+	glColor3f(1, 0, 0);
+	glLineWidth(2);
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(xpos + width / 2.0f, ypos + height / 2.0f);
+	glVertex2f(xpos - width / 2.0f, ypos + height / 2.0f);
+	glVertex2f(xpos - width / 2.0f, ypos - height / 2.0f);
+	glVertex2f(xpos + width / 2.0f, ypos - height / 2.0f);
+	glEnd();
+}
+
+void Circle::renderSelection()
+{
+	glColor3f(1, 0, 0);
+	glLineWidth(2);
+	glBegin(GL_LINE_LOOP);
+	for (int i = 0; i < 50; i++)
+	{
+		float theta = 2.0f * 3.1415926f * float(i) / float(50);
+		float cx = radius * cosf(theta + 3.1415926f / 2);
+		float cy = radius * sinf(theta + 3.1415926f / 2);
+
+		glVertex2f(xpos + cx, ypos + cy);
+	}
+	glEnd();
 }

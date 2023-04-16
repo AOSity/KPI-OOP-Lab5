@@ -21,15 +21,19 @@ int main(void)
     ApplySettings(window);
     ApplyCallbacks(window);
 
-    Group* root = new Group;
-    root->add(new Rectangle(200, 250, 300, 150));
-    root->add(new Circle(350, 140, 80));
-    root->add(new Circle(1350, 900, 69));
+    Screen root;
+    SetScreenRoot(&root);
 
-    Group* child = new Group;
-    child->add(new Rectangle(1000, 550, 100, 200));
-    child->add(new Circle(250, 700, 155));
-    root->add(child);
+    /*root.add(new Rectangle(200, 250, 300, 150));
+    root.add(new Circle(350, 140, 80));
+    root.add(new Circle(1350, 900, 69));
+
+    Screen child;
+    child.add(new Rectangle(1000, 550, 100, 200));
+    child.add(new Circle(250, 700, 155));
+    root.add(child.root);*/
+
+    double xpos, ypos;
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -45,14 +49,12 @@ int main(void)
         glVertex2f(0, 1080);
         glEnd();
 
-        root->render();
+        root.render();
 
         /* Buffer swap and events processing */
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    delete root;
 
     /* GLFW termination */
     glfwTerminate();
