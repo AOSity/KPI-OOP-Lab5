@@ -24,15 +24,6 @@ int main(void)
     Screen root;
     SetScreenRoot(&root);
 
-    /*root.add(new Rectangle(200, 250, 300, 150));
-    root.add(new Circle(350, 140, 80));
-    root.add(new Circle(1350, 900, 69));
-
-    Screen child;
-    child.add(new Rectangle(1000, 550, 100, 200));
-    child.add(new Circle(250, 700, 155));
-    root.add(child.root);*/
-
     double xpos, ypos;
 
     /* Loop until the user closes the window */

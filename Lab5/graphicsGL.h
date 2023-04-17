@@ -1,5 +1,5 @@
 #pragma once
-#include <GLFW/glfw3.h>
+#include "GLFW/glfw3.h"
 #include "logics.h"
 
 void ApplySettings(GLFWwindow* window);

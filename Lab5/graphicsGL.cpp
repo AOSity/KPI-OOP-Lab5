@@ -2,25 +2,7 @@
 
 Screen* rootPtr = nullptr;
 
-void ApplySettings(GLFWwindow* window)
-{
-    glfwMakeContextCurrent(window);
-    glfwSetWindowAspectRatio(window, 16, 9);
-    glOrtho(0, 1920, 0, 1080, -1.0f, 1.0f);
-    int ScreenWidth, ScreenHeight;
-    glfwGetWindowSize(window, &ScreenWidth, &ScreenHeight);
-    glViewport(0, 0, ScreenWidth, ScreenHeight);
-    return;
-}
-
-void ApplyCallbacks(GLFWwindow* window)
-{
-    glfwSetWindowSizeCallback(window, WindowSizeCallback);
-    glfwSetKeyCallback(window, KeyCallback);
-    glfwSetMouseButtonCallback(window, MouseButtonCallback);
-    return;
-}
-
+/* Callbacks */
 void WindowSizeCallback(GLFWwindow* window, int width, int height)
 {
     glfwMakeContextCurrent(window);
@@ -50,7 +32,13 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
     }
     if (key == GLFW_KEY_Q && action == GLFW_PRESS)
     {
-        rootPtr->selectedComponents.clear();
+        rootPtr->eraseSelection();
+    }
+    if (key == GLFW_KEY_R && action == GLFW_PRESS)
+    {
+        rootPtr->eraseComponents();
+        rootPtr->eraseSelection();
+
     }
     return;
 }
@@ -64,7 +52,25 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
     }
     return;
 }
+/* Callbacks end*/
 
+void ApplySettings(GLFWwindow* window)
+{
+    glfwMakeContextCurrent(window);
+    glfwSetWindowAspectRatio(window, 16, 9);
+    glOrtho(0, 1920, 0, 1080, -1.0f, 1.0f);
+    int ScreenWidth, ScreenHeight;
+    glfwGetWindowSize(window, &ScreenWidth, &ScreenHeight);
+    glViewport(0, 0, ScreenWidth, ScreenHeight);
+    return;
+}
+void ApplyCallbacks(GLFWwindow* window)
+{
+    glfwSetWindowSizeCallback(window, WindowSizeCallback);
+    glfwSetKeyCallback(window, KeyCallback);
+    glfwSetMouseButtonCallback(window, MouseButtonCallback);
+    return;
+}
 void GetCursorPosition(GLFWwindow* window, double* xpos, double* ypos)
 {
     glfwGetCursorPos(window, xpos, ypos);
@@ -76,7 +82,6 @@ void GetCursorPosition(GLFWwindow* window, double* xpos, double* ypos)
     *ypos = 1080 - *ypos;
     return;
 }
-
 void SetScreenRoot(Screen* root)
 {
     rootPtr = root;

@@ -3,7 +3,9 @@
 #include <vector>
 #include <set>
 
-/* Composite */
+/* Composite pattern */
+/* Component -> Rectangle, Circle, Group of them */
+
 class Component
 {
 public:
@@ -39,7 +41,7 @@ private:
 	std::vector<Component*> components;
 public:
 	double xmin, xmax, ymin, ymax;
-	Group() : xmin(1920.f), xmax(0.f), ymin(1080.f), ymax(0.f) {};
+	Group() : xmin(1921.f), xmax(-1.f), ymin(1081.f), ymax(-1.f) {};
 	~Group();
 	void borders(float* xmin, float* xmax, float* ymin, float* ymax) override;
 	void render() override;
@@ -48,36 +50,26 @@ public:
 	void add(Component* component) override;
 	void remove(Component* component) override;
 	Component* getChild(int index) override;
+	void eraseComponents();
 };
-/* */
+/* Composite pattern ends */
 
-#include <iostream>
-
+/* Facede? Screen to operate with root */
 class Screen
 {
-public:
+private:
 	Group* root;
-	Screen() { root = new Group; }
-	~Screen() { /* ? */ }
-	void render() { root->render(); renderSelection(); }
-	void add(Component* component) { root->add(component); }
-	void remove(Component* component) { root->remove(component); }
-	Component* findOnCursor(double cursorX, double cursorY) { return root->onCursor(cursorX, cursorY); }
-
 	std::set<Component*> selectedComponents;
-	void selectOnCursor(double cursorX, double cursorY) 
-	{ 
-		Component* selected;
-		if ((selected = findOnCursor(cursorX, cursorY)) != nullptr)
-		{
-			selectedComponents.insert(selected);
-		}
-	}
-	void renderSelection()
-	{
-		for (Component* selected : selectedComponents)
-		{
-			selected->renderSelection();
-		}
-	}
+public:
+	Screen() { root = new Group; }
+	~Screen() { /* delete root brings access violation */ }
+	void render();
+	void add(Component* component);
+	void remove(Component* component);
+	Component* findOnCursor(double cursorX, double cursorY);
+	void selectOnCursor(double cursorX, double cursorY);
+	void renderSelection();
+	void eraseComponents();
+	void eraseSelection();
 };
+/* Facade? ends */
