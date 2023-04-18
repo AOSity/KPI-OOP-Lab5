@@ -1,5 +1,6 @@
 #include "logics.h"
 #include "GLFW/glfw3.h"
+#include <typeinfo>
 
 //#include <iostream>
 
@@ -9,7 +10,7 @@
 void Rectangle::render()
 {
 	/* Render rectangle */
-	glColor3f(0, 0.5, 1);
+	glColor3f(red, green, blue);
 	glBegin(GL_POLYGON);
 	glVertex2f(xpos + width / 2.0f, ypos + height / 2.0f);
 	glVertex2f(xpos - width / 2.0f, ypos + height / 2.0f);
@@ -60,7 +61,7 @@ void Rectangle::renderSelection()
 void Circle::render()
 {
 	/* Render circle*/
-	glColor3f(1, 1, 0);
+	glColor3f(red, green, blue);
 	glBegin(GL_POLYGON);
 	for (int i = 0; i < 50; i++)
 	{
@@ -140,36 +141,47 @@ void Group::render()
 	{
 		component->render();
 	}
-	glColor3f(0, 0, 0);
+	glColor3f(1, 1, 1);
 	glLineWidth(2);
 	glBegin(GL_LINE_LOOP);
-	glVertex2f(xmin, ymin);
-	glVertex2f(xmax, ymin);
-	glVertex2f(xmax, ymax);
-	glVertex2f(xmin, ymax);
+	glVertex2f(xmin - 5, ymin - 5);
+	glVertex2f(xmax + 5, ymin - 5);
+	glVertex2f(xmax + 5, ymax + 5);
+	glVertex2f(xmin - 5, ymax + 5);
 	glEnd();
+}
+void Group::updateBorders()
+{
+	xmin = 1930.f;
+	xmax = -10.f;
+	ymin = 1090.f;
+	ymax = -10.f;
+	float cxmin, cxmax, cymin, cymax;
+	for (Component* component : components)
+	{
+		component->borders(&cxmin, &cxmax, &cymin, &cymax);
+		if (cxmin < xmin)
+		{
+			xmin = cxmin;
+		}
+		if (cxmax > xmax)
+		{
+			xmax = cxmax;
+		}
+		if (cymin < ymin)
+		{
+			ymin = cymin;
+		}
+		if (cymax > ymax)
+		{
+			ymax = cymax;
+		}
+	}
 }
 void Group::add(Component* component)
 {
 	components.push_back(component);
-	float cxmin, cxmax, cymin, cymax;
-	component->borders(&cxmin, &cxmax, &cymin, &cymax);
-	if (cxmin < xmin)
-	{
-		xmin = cxmin;
-	}
-	if (cxmax > xmax)
-	{
-		xmax = cxmax;
-	}
-	if (cymin < ymin)
-	{
-		ymin = cymin;
-	}
-	if (cymax > ymax)
-	{
-		ymax = cymax;
-	}
+	updateBorders();
 }
 void Group::remove(Component* component)
 {
@@ -195,22 +207,55 @@ Component* Group::onCursor(double cursorX, double cursorY)
 	}
 	if (foundComponent != nullptr)
 	{
-		//std::cout << "Found component: " << foundComponent << std::endl;
 		return foundComponent;
 	}
 	else
 	{
-		//std::cout << "Nothing found!" << std::endl;
-		return nullptr;
+		if (cursorX >= xmin && cursorX <= xmax && cursorY >= ymin && cursorY <= ymax)
+		{
+			return this;
+		}
+		else
+		{
+			return nullptr;
+		}
 	}
+}
+void Group::renderSelection()
+{
+	glColor3f(1, 0, 0);
+	glLineWidth(2);
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(xmin - 5, ymin - 5);
+	glVertex2f(xmax + 5, ymin - 5);
+	glVertex2f(xmax + 5, ymax + 5);
+	glVertex2f(xmin - 5, ymax + 5);
+	glEnd();
 }
 void Group::eraseComponents()
 {
 	components.clear();
-	xmin = 1921.f;
-	xmax = -1.f;
-	ymin = 1081.f;
-	ymax = -1.f;
+	xmin = 1930.f;
+	xmax = -10.f;
+	ymin = 1090.f;
+	ymax = -10.f;
+}
+void Group::eraseSelected(set<Component*> selectedComponents, Group* group)
+{
+	for (int i = group->components.size() - 1; i >= 0; i--)
+	{
+		if (typeid(*(group->components[i])) == typeid(Group))
+		{
+			eraseSelected(selectedComponents, (Group*)group->components[i]);
+		}
+		if (selectedComponents.find(group->components[i]) != selectedComponents.end()) // if component is in selectedComponent set
+		{
+			group->components.erase(group->components.begin() + i);
+			group->updateBorders();
+		}
+	}
+	updateBorders();
+	/* delete group if empty? */
 }
 /* Group implementation ends */
 
@@ -237,8 +282,39 @@ void Screen::selectOnCursor(double cursorX, double cursorY)
 	if ((selected = findOnCursor(cursorX, cursorY)) != nullptr)
 	{
 		selectedComponents.insert(selected);
+		selectAllGroup(selected);
+		/*if (typeid(*selected) == typeid(Group))
+		{
+			int i = 0;
+			Component* component = selected->getChild(i);
+			while (component != nullptr)
+			{
+				selectedComponents.insert(component);
+				i++;
+				component = selected->getChild(i);
+			}
+		}*/
 	}
 }
+void Screen::selectAllGroup(Component* selected)
+{
+	if (typeid(*selected) == typeid(Group))
+	{
+		int i = 0;
+		Component* component = selected->getChild(i);
+		while (component != nullptr)
+		{
+			selectedComponents.insert(component);
+			if (typeid(*component) == typeid(Group))
+			{
+				selectAllGroup(component);
+			}
+			i++;
+			component = selected->getChild(i);
+		}
+	}
+}
+
 void Screen::renderSelection()
 {
 	for (Component* selected : selectedComponents)
