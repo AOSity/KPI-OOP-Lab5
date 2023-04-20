@@ -152,29 +152,32 @@ void Group::render()
 }
 void Group::updateBorders()
 {
-	xmin = 1930.f;
-	xmax = -10.f;
-	ymin = 1090.f;
-	ymax = -10.f;
-	float cxmin, cxmax, cymin, cymax;
-	for (Component* component : components)
+	if (!isRoot)
 	{
-		component->borders(&cxmin, &cxmax, &cymin, &cymax);
-		if (cxmin < xmin)
+		xmin = 1930.f;
+		xmax = -10.f;
+		ymin = 1090.f;
+		ymax = -10.f;
+		float cxmin, cxmax, cymin, cymax;
+		for (Component* component : components)
 		{
-			xmin = cxmin;
-		}
-		if (cxmax > xmax)
-		{
-			xmax = cxmax;
-		}
-		if (cymin < ymin)
-		{
-			ymin = cymin;
-		}
-		if (cymax > ymax)
-		{
-			ymax = cymax;
+			component->borders(&cxmin, &cxmax, &cymin, &cymax);
+			if (cxmin < xmin)
+			{
+				xmin = cxmin;
+			}
+			if (cxmax > xmax)
+			{
+				xmax = cxmax;
+			}
+			if (cymin < ymin)
+			{
+				ymin = cymin;
+			}
+			if (cymax > ymax)
+			{
+				ymax = cymax;
+			}
 		}
 	}
 }
@@ -223,6 +226,12 @@ Component* Group::onCursor(double cursorX, double cursorY)
 }
 void Group::renderSelection()
 {
+	// new
+	for (Component* component : components)
+	{
+		component->renderSelection();
+	}
+
 	glColor3f(1, 0, 0);
 	glLineWidth(2);
 	glBegin(GL_LINE_LOOP);
@@ -235,10 +244,13 @@ void Group::renderSelection()
 void Group::eraseComponents()
 {
 	components.clear();
-	xmin = 1930.f;
-	xmax = -10.f;
-	ymin = 1090.f;
-	ymax = -10.f;
+	if (!isRoot)
+	{
+		xmin = 1930.f;
+		xmax = -10.f;
+		ymin = 1090.f;
+		ymax = -10.f;
+	}
 }
 void Group::eraseSelected(set<Component*> selectedComponents, Group* group)
 {
@@ -246,16 +258,27 @@ void Group::eraseSelected(set<Component*> selectedComponents, Group* group)
 	{
 		if (typeid(*(group->components[i])) == typeid(Group))
 		{
-			eraseSelected(selectedComponents, (Group*)group->components[i]);
+			if (selectedComponents.find(group->components[i]) != selectedComponents.end()) // if component is in selectedComponent set
+			{
+				((Group*)group->components[i])->eraseComponents();
+			}
+			else
+			{
+				eraseSelected(selectedComponents, (Group*)group->components[i]);
+			}
+			if (((Group*)group->components[i])->components.empty())
+			{
+				group->components.erase(group->components.begin() + i);
+				group->updateBorders();
+			}
 		}
-		if (selectedComponents.find(group->components[i]) != selectedComponents.end()) // if component is in selectedComponent set
+		else if (selectedComponents.find(group->components[i]) != selectedComponents.end()) // if component is in selectedComponent set
 		{
 			group->components.erase(group->components.begin() + i);
 			group->updateBorders();
 		}
 	}
 	updateBorders();
-	/* delete group if empty? */
 }
 /* Group implementation ends */
 
@@ -281,19 +304,10 @@ void Screen::selectOnCursor(double cursorX, double cursorY)
 	Component* selected;
 	if ((selected = findOnCursor(cursorX, cursorY)) != nullptr)
 	{
-		selectedComponents.insert(selected);
-		selectAllGroup(selected);
-		/*if (typeid(*selected) == typeid(Group))
+		if (selected != root)
 		{
-			int i = 0;
-			Component* component = selected->getChild(i);
-			while (component != nullptr)
-			{
-				selectedComponents.insert(component);
-				i++;
-				component = selected->getChild(i);
-			}
-		}*/
+			selectedComponents.insert(selected);
+		}
 	}
 }
 void Screen::selectAllGroup(Component* selected)
@@ -329,5 +343,23 @@ void Screen::eraseComponents()
 void Screen::eraseSelection()
 {
 	selectedComponents.clear();
+}
+void Screen::eraseSelected() 
+{ 
+	root->eraseSelected(selectedComponents, root); 
+}
+void Screen::groupSelected()
+{
+	if (selectedComponents.size() >= 2)
+	{
+		Group* newGroup = new Group;
+		for (Component* selected : selectedComponents)
+		{
+			newGroup->add(selected);
+			root->remove(selected);
+		}
+		root->add(newGroup);
+	}
+	eraseSelection();
 }
 /* Screen implementation ends*/

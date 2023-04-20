@@ -44,8 +44,9 @@ class Group : public Component {
 private:
 	vector<Component*> components;
 public:
+	bool isRoot;
 	double xmin, xmax, ymin, ymax;
-	Group() : xmin(1930.f), xmax(-10.f), ymin(1090.f), ymax(-10.f) {};
+	Group() : xmin(1930.f), xmax(-10.f), ymin(1090.f), ymax(-10.f), isRoot(false) {};
 	~Group();
 	void borders(float* xmin, float* xmax, float* ymin, float* ymax) override;
 	void render() override;
@@ -67,7 +68,7 @@ private:
 	Group* root;
 	set<Component*> selectedComponents;
 public:
-	Screen() { root = new Group; }
+	Screen() { root = new Group; root->isRoot = true; }
 	~Screen() { /* delete root brings access violation */ }
 	void render();
 	void add(Component* component);
@@ -77,18 +78,8 @@ public:
 	void renderSelection();
 	void eraseComponents();
 	void eraseSelection();
-	void eraseSelected() {root->eraseSelected(selectedComponents, root); }
-	void groupSelected()
-	{
-		Group* newGroup = new Group;
-		for (Component* selected : selectedComponents)
-		{
-			newGroup->add(move(selected));
-		}
-		root->add(newGroup);
-		//eraseSelected();
-		eraseSelection();
-	}
+	void eraseSelected();
+	void groupSelected();
 private:
 	void selectAllGroup(Component* selected);
 };

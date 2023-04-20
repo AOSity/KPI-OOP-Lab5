@@ -40,7 +40,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
     {
         double xpos, ypos;
         GetCursorPosition(window, &xpos, &ypos);
-        rootPtr->add(new Circle(xpos, ypos, 55, 1, 0, 0.45));
+        rootPtr->add(new Circle(xpos, ypos, 55, 0.6, 0, 0.45));
     }
     if (key == GLFW_KEY_Q && action == GLFW_PRESS)
     {
