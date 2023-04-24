@@ -3,11 +3,11 @@ OOP Lab5 "Design Patterns"
 
 Project to develop knowledge about design patterns.
 
-CONTROLS:
-	Mouse:
+CONTROLS
+	Mouse
 		LMB				- select object on cursor
 		LEFT_CTRL + LMB	- multiple selection
-	Keyboard:
+	Keyboard
 		1, 2, 3, 4	- create new object on cursor
 		ESC			- close window
 		R			- erase all objects
