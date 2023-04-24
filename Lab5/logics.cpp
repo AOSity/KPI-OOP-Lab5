@@ -55,6 +55,21 @@ void Rectangle::renderSelection()
 	glVertex2f(xpos + width / 2.0f, ypos - height / 2.0f);
 	glEnd();
 }
+void Rectangle::setPosition(double newXpos, double newYpos)
+{
+	xpos = newXpos;
+	ypos = newYpos;
+}
+void Rectangle::getPosition(double* returnXpos, double* returnYpos)
+{
+	*returnXpos = xpos;
+	*returnYpos = ypos;
+}
+Component* Rectangle::getCopy()
+{
+	Component* rectangleCopy = new Rectangle(xpos, ypos, width, height, red, green, blue);
+	return rectangleCopy;
+}
 /* Rectangle implementation ends */
 
 /* Circle implementation */
@@ -118,6 +133,21 @@ void Circle::renderSelection()
 	}
 	glEnd();
 }
+void Circle::setPosition(double newXpos, double newYpos)
+{
+	xpos = newXpos;
+	ypos = newYpos;
+}
+void Circle::getPosition(double* returnXpos, double* returnYpos)
+{
+	*returnXpos = xpos;
+	*returnYpos = ypos;
+}
+Component* Circle::getCopy()
+{
+	Component* circleCopy = new Circle(xpos, ypos, radius, red, green, blue);
+	return circleCopy;
+}
 /* Circle implementation ends */
 
 /* Group implementation */
@@ -158,26 +188,30 @@ void Group::updateBorders()
 		xmax = -10.f;
 		ymin = 1090.f;
 		ymax = -10.f;
-		float cxmin, cxmax, cymin, cymax;
-		for (Component* component : components)
+	}
+	float cxmin, cxmax, cymin, cymax;
+	for (Component* component : components)
+	{
+		if (typeid(*component) == typeid(Group))
 		{
-			component->borders(&cxmin, &cxmax, &cymin, &cymax);
-			if (cxmin < xmin)
-			{
-				xmin = cxmin;
-			}
-			if (cxmax > xmax)
-			{
-				xmax = cxmax;
-			}
-			if (cymin < ymin)
-			{
-				ymin = cymin;
-			}
-			if (cymax > ymax)
-			{
-				ymax = cymax;
-			}
+			((Group*)component)->updateBorders();
+		}
+		component->borders(&cxmin, &cxmax, &cymin, &cymax);
+		if (cxmin < xmin)
+		{
+			xmin = cxmin;
+		}
+		if (cxmax > xmax)
+		{
+			xmax = cxmax;
+		}
+		if (cymin < ymin)
+		{
+			ymin = cymin;
+		}
+		if (cymax > ymax)
+		{
+			ymax = cymax;
 		}
 	}
 }
@@ -226,7 +260,6 @@ Component* Group::onCursor(double cursorX, double cursorY)
 }
 void Group::renderSelection()
 {
-	// new
 	for (Component* component : components)
 	{
 		component->renderSelection();
@@ -280,16 +313,81 @@ void Group::eraseSelected(set<Component*> selectedComponents, Group* group)
 	}
 	updateBorders();
 }
+void Group::setPosition(double newXpos, double newYpos)
+{
+	double groupXpos, groupYpos;
+	getPosition(&groupXpos, &groupYpos);
+	for (Component* component : components)
+	{
+		double componentXpos, componentYpos;
+		component->getPosition(&componentXpos, &componentYpos);
+		component->setPosition(componentXpos + newXpos - groupXpos, componentYpos + newYpos - groupYpos);
+	}
+	updateBorders();
+}
+void Group::getPosition(double* returnXpos, double* returnYpos)
+{
+	*returnXpos = xmin + (xmax - xmin) / 2.f;
+	*returnYpos = ymin + (ymax - ymin) / 2.f;
+}
+Component* Group::getCopy()
+{
+	Group* groupCopy = new Group;
+	if (isRoot)
+	{
+		groupCopy->isRoot = true;
+		groupCopy->xmin = -10;
+		groupCopy->xmax = 1930;
+		groupCopy->ymin = -10;
+		groupCopy->ymax = 1090;
+	}
+	for (Component* component : components)
+	{
+		groupCopy->add(component->getCopy());
+	}
+	return groupCopy;
+}
 /* Group implementation ends */
 
 /* Screen implementation */
+Screen::Screen()
+{
+	root = new Group;
+	root->isRoot = true;
+	root->xmin = -10;
+	root->xmax = 1930;
+	root->ymin = -10;
+	root->ymax = 1090;
+}
+Screen::~Screen() 
+{ 
+	delete copiedComponent; 
+	delete root; 
+}
 void Screen::render()
 {
 	root->render(); renderSelection();
 }
 void Screen::add(Component* component)
 {
-	root->add(component);
+	if (selectedComponents.size() == 1)
+	{
+		for (Component* selected : selectedComponents)
+		{
+			if (typeid(*selected) == typeid(Group))
+			{
+				((Group*)selected)->add(component);
+			}
+			else
+			{
+				root->add(component);
+			}
+		}
+	}
+	else
+	{
+		root->add(component);
+	}
 }
 void Screen::remove(Component* component)
 {
@@ -328,7 +426,6 @@ void Screen::selectAllGroup(Component* selected)
 		}
 	}
 }
-
 void Screen::renderSelection()
 {
 	for (Component* selected : selectedComponents)
@@ -339,14 +436,16 @@ void Screen::renderSelection()
 void Screen::eraseComponents()
 {
 	root->eraseComponents();
+	eraseSelection();
 }
 void Screen::eraseSelection()
 {
 	selectedComponents.clear();
 }
-void Screen::eraseSelected() 
-{ 
-	root->eraseSelected(selectedComponents, root); 
+void Screen::eraseSelected()
+{
+	root->eraseSelected(selectedComponents, root);
+	eraseSelection();
 }
 void Screen::groupSelected()
 {
@@ -361,5 +460,62 @@ void Screen::groupSelected()
 		root->add(newGroup);
 	}
 	eraseSelection();
+}
+void Screen::moveToCursor(double cursorX, double cursorY)
+{
+	for (Component* selected : selectedComponents)
+	{
+		selected->setPosition(cursorX, cursorY);
+	}
+	root->updateBorders();
+}
+void Screen::copySelected()
+{
+	if (selectedComponents.size() == 1)
+	{
+		for (Component* selected : selectedComponents)
+		{
+			copiedComponent = selected->getCopy();
+		}
+	}
+}
+void Screen::pasteOnCursor(double cursorX, double cursorY)
+{
+	if (copiedComponent != nullptr)
+	{
+		copiedComponent->setPosition(cursorX, cursorY);
+
+		if (selectedComponents.size() == 1)
+		{
+			for (Component* selected : selectedComponents)
+			{
+				if (typeid(*selected) == typeid(Group))
+				{
+					((Group*)selected)->add(copiedComponent->getCopy());
+				}
+				else
+				{
+					root->add(copiedComponent->getCopy());
+				}
+			}
+		}
+		else
+		{
+			root->add(copiedComponent->getCopy());
+		}
+	}
+}
+void Screen::backup()
+{
+	rootBackup.push_back((Group*)root->getCopy());
+}
+void Screen::undo()
+{
+	if (rootBackup.size() > 0)
+	{
+		root = rootBackup.back();
+		rootBackup.pop_back();
+		eraseSelection();
+	}
 }
 /* Screen implementation ends*/

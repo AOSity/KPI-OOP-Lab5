@@ -17,8 +17,11 @@ public:
 	virtual void renderSelection() {}
 	virtual void add(Component* component) {}
 	virtual void remove(Component* component) {}
+	virtual void setPosition(double xpos, double ypos) = 0;
+	virtual void getPosition(double *xpos, double *ypos) = 0;
 	virtual Component* onCursor(double cursorX, double cursorY) { return nullptr; }
 	virtual Component* getChild(int index) { return nullptr; }
+	virtual Component* getCopy() = 0;
 };
 class Rectangle : public Component {
 public:
@@ -28,7 +31,10 @@ public:
 	void borders(float* xmin, float* xmax, float* ymin, float* ymax) override;
 	void render() override;
 	void renderSelection() override;
+	void setPosition(double xpos, double ypos) override;
+	void getPosition(double* xpos, double* ypos) override;
 	Component* onCursor(double cursorX, double cursorY) override;
+	Component* getCopy() override;
 };
 class Circle : public Component {
 public:
@@ -38,7 +44,10 @@ public:
 	void borders(float* xmin, float* xmax, float* ymin, float* ymax) override;
 	void render() override;
 	void renderSelection() override;
+	void setPosition(double xpos, double ypos) override;
+	void getPosition(double* xpos, double* ypos) override;
 	Component* onCursor(double cursorX, double cursorY) override;
+	Component* getCopy() override;
 };
 class Group : public Component {
 private:
@@ -58,18 +67,23 @@ public:
 	void eraseComponents();
 	void updateBorders();
 	void eraseSelected(set<Component*> selectedComponents, Group* group);
+	void setPosition(double xpos, double ypos) override;
+	void getPosition(double* xpos, double* ypos) override;
+	Component* getCopy() override;
 };
 /* Composite pattern ends */
 
-/* Facede? Screen to operate with root */
+/* Facade? Screen to operate with Composite family */
 class Screen
 {
 private:
 	Group* root;
+	vector<Group*> rootBackup;
 	set<Component*> selectedComponents;
+	Component* copiedComponent = nullptr;
 public:
-	Screen() { root = new Group; root->isRoot = true; }
-	~Screen() { /* delete root brings access violation */ }
+	Screen();
+	~Screen();
 	void render();
 	void add(Component* component);
 	void remove(Component* component);
@@ -80,6 +94,11 @@ public:
 	void eraseSelection();
 	void eraseSelected();
 	void groupSelected();
+	void moveToCursor(double cursorX, double cursorY);
+	void copySelected();
+	void pasteOnCursor(double cursorX, double cursorY);
+	void backup();
+	void undo();
 private:
 	void selectAllGroup(Component* selected);
 };
